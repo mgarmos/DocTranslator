@@ -115,19 +115,33 @@ Para instalar y ejecutar el proyecto, sigue estos pasos:
 
 ### 5.3 **Activa el entorno virtual**
 
-   ```bash
-   source env/bin/activate
-   ```
+- **En sistemas Unix o MacOS**:
+
+  ```bash
+  source env/bin/activate
+  ```
+
+- **En Windows (PowerShell)**:
+
+  ```bash
+  .\env\Scripts\Activate.ps1
+  ```
+
+- **En Windows (cmd)**:
+
+  ```bash
+  env\Scripts\activate
+  ```
 
 ### 5.4 **Instala las dependencias**
 
    Asegúrate de que el entorno virtual esté activado
+
    ```bash
    pip install -r requirements.txt
    ```
-   
 
-### 5.5 ** Ejecuta la aplicación
+### 5.5 **Ejecuta la aplicación
 
 Una vez que todas las dependencias estén instaladas, puedes ejecutar la aplicación. Por ejemplo:
 
@@ -135,10 +149,10 @@ Una vez que todas las dependencias estén instaladas, puedes ejecutar la aplicac
   python main.py
   ```
 
-### 5.6 ** Desactiva el entorno virtual (opcional)
+### 5.6 **Desactiva el entorno virtual (opcional)
 
 Cuando termines de trabajar, puedes desactivar el entorno virtual con:
 
   ```bash
   deactivate
-    ```
+  ```
