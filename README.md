@@ -1,3 +1,4 @@
+
 # DocTranslator
 
 ## 1. **Descripción General del Proyecto**
@@ -16,15 +17,18 @@ La estructura del proyecto debe ser modular desde el inicio para facilitar la es
 ## 2. **Requisitos Funcionales**
 
 ### 2.1 **Manejo de eBooks**
+
 - Leer eBooks en formato EPUB (soporte inicial).
 - Extraer el texto navegable y los metadatos del eBook.
 - Posibilidad de añadir soporte a otros formatos (como PDF) en el futuro.
 
 ### 2.2 **Traducción**
+
 - Integrar con una API de traducción (inicialmente, Google Translate a través de `googletrans` o la API oficial de Google Cloud).
 - Soporte para múltiples idiomas (detectar automáticamente el idioma origen).
 
 ### 2.3 **Gestión de la Cola de Traducción**
+
 - Implementar un sistema de cola para manejar las llamadas a la API de traducción.
 - Registrar el progreso de las traducciones, indicando:
   - El índice de la última cadena traducida exitosamente.
@@ -32,6 +36,7 @@ La estructura del proyecto debe ser modular desde el inicio para facilitar la es
 - Permitir reanudar el proceso desde el punto en que se detuvo.
 
 ### 2.4 **Reemplazo de Texto**
+
 - Reemplazar las cadenas traducidas en la estructura del eBook.
 - Preservar el formato y la estructura original.
 
@@ -40,27 +45,33 @@ La estructura del proyecto debe ser modular desde el inicio para facilitar la es
 ## 3. **Requisitos No Funcionales**
 
 ### 3.1 **Arquitectura Modular**
+
 El proyecto debe dividirse en módulos claramente diferenciados según sus funcionalidades principales:
+
 - Manejo de eBooks.
 - Traducción (interacción con la API).
 - Gestión de la cola de traducción.
 - Inserción de cadenas traducidas.
 
 ### 3.2 **Escalabilidad**
+
 - Permitir agregar soporte para nuevos formatos de eBooks y servicios de traducción.
 - Manejar grandes volúmenes de texto eficientemente.
 
 ### 3.3 **Manejo de Errores**
+
 - Registrar errores en un log para facilitar la depuración.
 - Proveer mensajes claros en caso de fallos, especialmente en la interacción con la API de traducción.
 
 ### 3.4 **Persistencia de Datos**
+
 - Guardar la cola de traducción en un archivo (por ejemplo, JSON) para reanudar el trabajo.
 - Registrar el progreso en un archivo de log.
 
 ---
 
 ## 4. **Estructura Propuesta del Proyecto**
+
 ```plaintext
 ebook-translator/
 ├── main.py                 # Punto de entrada principal de la aplicación.
@@ -79,5 +90,55 @@ ebook-translator/
 │   ├── test_replacer.py
 │   ├── test_queue_manager.py
 ├── requirements.txt        # Dependencias del proyecto.
-├── poc/                    # Proof of Concept - 
+├── poc/                    # Proof of Concept.
 └── README.md               # Documentación inicial del proyecto.
+```
+
+---
+
+## 5. **Instalación**
+
+Para instalar y ejecutar el proyecto, sigue estos pasos:
+
+### 5.1 **Clona el repositorio**
+
+   ```bash
+   git clone https://github.com/mgarmos/DocTranslator.git
+   cd DocTranslator
+   ```
+
+### 5.2  **Crea un entorno virtual**
+
+   ```bash
+   python3 -m venv env
+   ```
+
+### 5.3 **Activa el entorno virtual**
+
+   ```bash
+   source env/bin/activate
+   ```
+
+### 5.4 **Instala las dependencias**
+
+   Asegúrate de que el entorno virtual esté activado
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
+
+### 5.5 ** Ejecuta la aplicación
+
+Una vez que todas las dependencias estén instaladas, puedes ejecutar la aplicación. Por ejemplo:
+
+  ```bash
+  python main.py
+  ```
+
+### 5.6 ** Desactiva el entorno virtual (opcional)
+
+Cuando termines de trabajar, puedes desactivar el entorno virtual con:
+
+  ```bash
+  deactivate
+    ```

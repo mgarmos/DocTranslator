@@ -27,8 +27,8 @@ def leer_ebook(ruta_archivo):
     return textos
 
 # Definir la ruta del archivo EPUB
-ruta_archivo1 = 'poc/Docs/example_ebook.epub'
-ruta_archivo2 = 'poc/Docs/zenstudiespodcast.epub'
+ruta_archivo1 = 'poc/Examples/example_ebook.epub'
+ruta_archivo2 = 'poc/Examples/zenstudiespodcast.epub'
 
 # Leer el archivo EPUB y almacenar el texto en una lista
 textos = leer_ebook(ruta_archivo2)
