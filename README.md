@@ -1,4 +1,4 @@
-# DocTranslater
+# DocTranslator
 
 ## 1. **Descripción General del Proyecto**
 
