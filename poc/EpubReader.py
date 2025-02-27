@@ -31,7 +31,7 @@ ruta_archivo1 = 'poc/Examples/example_ebook.epub'
 ruta_archivo2 = 'poc/Examples/zenstudiespodcast.epub'
 
 # Leer el archivo EPUB y almacenar el texto en una lista
-textos = leer_ebook(ruta_archivo2)
+textos = leer_ebook(ruta_archivo1)
 
 # Imprimir el texto
 print('---- INICIO ----------')

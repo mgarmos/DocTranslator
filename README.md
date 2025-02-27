@@ -141,7 +141,7 @@ Para instalar y ejecutar el proyecto, sigue estos pasos:
    pip install -r requirements.txt
    ```
 
-### 5.5 **Ejecuta la aplicación
+### 5.5 **Ejecuta la aplicación**
 
 Una vez que todas las dependencias estén instaladas, puedes ejecutar la aplicación. Por ejemplo:
 
@@ -149,7 +149,7 @@ Una vez que todas las dependencias estén instaladas, puedes ejecutar la aplicac
   python main.py
   ```
 
-### 5.6 **Desactiva el entorno virtual (opcional)
+### 5.6 **Desactiva el entorno virtual (opcional)**
 
 Cuando termines de trabajar, puedes desactivar el entorno virtual con:
 
