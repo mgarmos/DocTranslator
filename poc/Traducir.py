@@ -1,18 +1,23 @@
 from deep_translator import GoogleTranslator
+import json
 
-# Texto a traducir
-texto_original1 = (
-    " It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness,"
-     " it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness,"
-     " it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us, we were"
-     " all going direct to Heaven, we were all going direct the other way—in short, the period was so far like the present period,"
-     " that some of its noisiest authorities insisted on its being received, for good or for evil, in the superlative degree of comparison only."
-)
+# Ruta del archivo JSON que contiene los textos extraídos
+json_file_path_ini = 'poc/Examples/text_elements.json'
+json_file_path_mod = 'poc/Examples/text_elements_modificado.json'
 
+# 1. Leer los elementos desde el archivo JSON
+with open(json_file_path_ini, 'r', encoding='utf-8') as json_file:
+    text_elements = json.load(json_file)
 
-# Traducir al inglés
-resultado = GoogleTranslator(source='english', target='spanish').translate(texto_original1)
+# 2. Traducir cada texto y actualizar la lista
+for idx, (path, text) in enumerate(text_elements):
+    translated_text = GoogleTranslator(source='english', target='spanish').translate(text)  # Traducir el texto
+    text_elements[idx] = (path, translated_text)  # Actualizar el texto traducido
 
-# Imprimir el texto traducido
-print(f"Texto original: {texto_original1}")
-print(f"Texto traducido: {resultado}")
+# 3. Guardar los textos traducidos de nuevo en el archivo JSON
+with open(json_file_path_mod, 'w', encoding='utf-8') as json_file:
+    json.dump(text_elements, json_file, ensure_ascii=False, indent=4)
+
+# Imprimir los textos originales y traducidos
+for path, text in text_elements:
+    print(f"Ruta: {path}, Texto traducido: {text}")
