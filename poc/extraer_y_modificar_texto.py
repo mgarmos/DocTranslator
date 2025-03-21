@@ -1,4 +1,5 @@
 from lxml import etree
+import json
 
 # Este script tiene como objetivo manipular un documento XHTML.
 # Realiza las siguientes operaciones:
@@ -60,26 +61,39 @@ def modify_document_with_text_elements(element, text_elements, path=''):
     return text_elements
 
 # Cargar el documento XHTML
-with open('poc/Examples/ejemplo.xhtml', 'rb') as file: 
+
+with open('poc/Examples/04_c1.html', 'rb') as file: 
     tree = etree.parse(file)
 
 # 1. Extraer rutas y textos
 text_elements = get_text_elements_with_path(tree.getroot())  # Llamar a getroot()
 
-# 2. Imprimir los elementos extraídos
-print('Elementos extraídos:')
-for path, text in text_elements:
-    print(f'Ruta: {path}, Texto: {text}')
 
-# 3. Modifico text_elements
+# 2. Guardar los elementos extraídos en un archivo JSON
+json_file_path = 'poc/Examples/text_elements.json'
+with open(json_file_path, 'w') as json_file:
+    json.dump(text_elements, json_file, ensure_ascii=False, indent=4)
+
+# 2. Imprimir los elementos extraídos
+""" print('Elementos extraídos:')
+for path, text in text_elements:
+    print(f'Ruta: {path}, Texto: {text}') """
+
+""" # 3. Modifico text_elements
 lista_temporal = []
 for tupla in text_elements:
     nuevo_texto = tupla[1] + ' Modificado'  # Añadir " Modificado" al texto original
     nueva_tupla = (tupla[0], nuevo_texto)  # Crear una nueva tupla con la ruta y el nuevo texto
-    lista_temporal.append(nueva_tupla)
+    lista_temporal.append(nueva_tupla) """
 
-# Reemplazar la lista original con la nueva lista
-text_elements = lista_temporal    
+
+# 1. Leer el json traducido
+json_file_path_mod = 'poc/Examples/text_elements_modificado.json'
+with open(json_file_path_mod, 'r', encoding='utf-8') as json_file:
+    text_elements = json.load(json_file)
+
+    print(text_elements)
+   
 
 # 4. Modificar el documento
 modify_document_with_text_elements(tree.getroot(), text_elements)
