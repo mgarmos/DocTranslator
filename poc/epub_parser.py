@@ -18,8 +18,11 @@ class EPUBParser():
         for index, item in enumerate(book.get_items_of_type(ebooklib.ITEM_DOCUMENT), start=1):
             tree = etree.fromstring(item.get_content())           
             text_elements.extend(self.get_text_elements_with_path(tree, index))
-        
-        return text_elements
+
+        # Agregar el estado de traducción a cada elemento
+        text_elements_con_traduccion = [[path, text, "N"] for path, text in text_elements]
+
+        return text_elements_con_traduccion
 
     def modify_document(self, content, text_elements):
         """Modifies the EPUB document based on the provided text elements."""
@@ -45,7 +48,7 @@ class EPUBParser():
     def modify_document_with_text_elements(self, element, text_elements, path=''):
         for idx, child in enumerate(element.iterchildren(), start=1):
             current_path = self._build_path(child, path, idx)
-            for text_path, new_text in text_elements:
+            for text_path, new_text, traduccion in text_elements:
                 if current_path == text_path:
                     child.text = new_text
                     break
@@ -56,7 +59,8 @@ class EPUBParser():
 
 def main(ejecucion=1):
     # Ruta del archivo EPUB
-    epub_path = 'poc/Examples/The Inner Game of Music - Barry Green.epub'
+    epub_path = 'poc/Examples/Lonely Planet Egypt - Lonely Planet.epub'
+    #epub_path = 'poc/Examples/Prueba.epub'
     
     # Crear una instancia del EPUBParser
     parser = EPUBParser()
@@ -68,8 +72,8 @@ def main(ejecucion=1):
         text_elements = parser.extract_text(epub_path)
         
         # Mostrar el texto extraído
-        for path, text in text_elements:
-            print(f'Ruta: {path}, Texto: {text}')
+        for path, text, estadoTraduccion in text_elements:
+            print(f'Ruta: {path}, Texto: {text} traducido: {estadoTraduccion}')
 
         # 2. Guardar los elementos extraídos en un archivo JSON
         json_file_path = 'poc/Examples/text_elements.json'
@@ -89,5 +93,5 @@ def main(ejecucion=1):
         print("El EPUB ha sido modificado y guardado como 'modified_book.epub'.")
 
 if __name__ == "__main__":
-    ejecucion = 1
+    ejecucion = 2
     main(ejecucion)
