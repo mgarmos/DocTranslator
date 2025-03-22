@@ -76,7 +76,8 @@ El proyecto debe dividirse en módulos claramente diferenciados según sus funci
 ebook-translator/
 ├── main.py                 # Punto de entrada principal de la aplicación.
 ├── modules/                # Módulos funcionales organizados.
-│   ├── parser.py           # Manejo de la estructura del ebook (navegación y extracción de texto).
+│   ├── parsers             
+|   |   ├── xhtml_parser    # Manejo de la estructura del ebook (navegación y extracción de texto).
 │   ├── translator.py       # Lógica de traducción (gestión de la cola de llamadas y API de traducción).
 │   ├── replacer.py         # Reemplazo del texto traducido en el ebook.
 │   ├── queue_manager.py    # Gestión de la cola y registro de progreso.
