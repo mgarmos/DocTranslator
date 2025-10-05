@@ -20,6 +20,7 @@ class EPUBParser():
             text_elements.extend(self.get_text_elements_with_path(tree, index))
 
         # Agregar el estado de traducción a cada elemento
+        # Nota: text_elements ahora puede incluir entradas de tail con ruta terminada en '/tail()'
         text_elements_con_traduccion = [[path, text, "N"] for path, text in text_elements]
 
         return text_elements_con_traduccion
@@ -37,29 +38,60 @@ class EPUBParser():
         epub.write_epub('poc/Examples/modified_book.epub', book)
 
     def get_text_elements_with_path(self, element, path=''):
+        """
+        Recorre el árbol y extrae tanto .text como .tail.
+        - Para .text usa la ruta normal: /tag[idx]/...
+        - Para .tail añade la entrada con sufijo '/tail()' en la ruta correspondiente.
+        """
         text_elements = []
         for idx, child in enumerate(element.iterchildren(), start=1):
             current_path = self._build_path(child, path, idx)
+
+            # extraer .text del child
             if child.text and child.text.strip():
                 text_elements.append((current_path, child.text.strip()))
+
+            # recorrer hijos
             text_elements.extend(self.get_text_elements_with_path(child, current_path))
+
+            # BUG fix: capturar .tail (texto inmediatamente después del child)
+            # Se añade como entrada separada con ruta current_path + '/tail()'
+            if child.tail and child.tail.strip():
+                tail_path = current_path + '/tail()'
+                text_elements.append((tail_path, child.tail.strip()))
+
         return text_elements
 
     def modify_document_with_text_elements(self, element, text_elements, path=''):
+        """
+        Recorre y reemplaza tanto .text como .tail.
+        Se espera que las entradas de text_elements que correspondan a tails tengan rutas terminadas en '/tail()'.
+        """
         for idx, child in enumerate(element.iterchildren(), start=1):
             current_path = self._build_path(child, path, idx)
+
+            # buscar reemplazo para .text
             for text_path, new_text, traduccion in text_elements:
                 if current_path == text_path:
                     child.text = new_text
                     break
+
+            # recursión en hijos
             self.modify_document_with_text_elements(child, text_elements, current_path)
+
+            # buscar reemplazo para .tail (ruta con sufijo '/tail()')
+            tail_key = current_path + '/tail()'
+            for text_path, new_text, traduccion in text_elements:
+                if tail_key == text_path:
+                    child.tail = new_text
+                    break
 
     def _build_path(self, element, path, idx):
         return f'{path}/{element.tag.split("}")[-1]}[{idx}]' if '}' in element.tag else f'{path}/{element.tag}[{idx}]'
 
 def main(ejecucion=1):
     # Ruta del archivo EPUB
-    epub_path = 'poc/Examples/Lonely Planet Egypt - Lonely Planet.epub'
+    epub_path = 'poc/Examples/52 Weekly Affirmations_ Techniques to Unle - Joseph Murphy.epub'
     #epub_path = 'poc/Examples/Prueba.epub'
     
     # Crear una instancia del EPUBParser
