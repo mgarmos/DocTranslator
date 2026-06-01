@@ -7,97 +7,67 @@ from tqdm import tqdm
 json_file_path_ini = 'poc/Examples/text_elements.json'
 json_file_path_mod = 'poc/Examples/text_elements_modificado.json'
 
-# Separador único que no aparecerá en los textos
-SEPARADOR = " |||SEP||| "
+# Parámetros de configuración
+BATCH_SIZE = 50  # Guardar cada 50 traducciones
+SAVE_INTERVAL = 60  # O guardar cada 60 segundos
+MAX_INTENTOS = 5
+
+def guardar_progreso(text_elements, file_path):
+    """Guarda el progreso actual en el archivo JSON"""
+    with open(file_path, 'w', encoding='utf-8') as json_file:
+        json.dump(text_elements, json_file, ensure_ascii=False, indent=4)
 
 # 1. Leer los elementos desde el archivo JSON
 with open(json_file_path_ini, 'r', encoding='utf-8') as json_file:
     text_elements = json.load(json_file)
 
-# 2. Preparar textos para traducción por lotes
+# 2. Traducir cada texto y actualizar la lista
 total_textos = len(text_elements)
 traducidos = 0
 inicio = time.time()
-max_intentos = 5
+ultimo_guardado = time.time()
+traducciones_desde_ultimo_guardado = 0
+
 intentos = 0
-
-# Tamaño máximo del lote (en caracteres, considerando límite de Google Translate)
-MAX_BATCH_SIZE = 4500  # Dejamos margen respecto al límite de 5000
-
-while intentos < max_intentos:
+while intentos < MAX_INTENTOS:
     try:
-        # Agrupar textos pendientes de traducir
-        textos_pendientes = []
-        indices_pendientes = []
-        
-        for idx, (path, text, traduccion) in enumerate(text_elements):
+        for idx, (path, text, traduccion) in tqdm(enumerate(text_elements), total=total_textos):
             if traduccion is None or traduccion == "N":
-                textos_pendientes.append(text)
-                indices_pendientes.append(idx)
-        
-        if not textos_pendientes:
-            print("No hay textos pendientes de traducir.")
-            break
-        
-        # Procesar en lotes
-        i = 0
-        with tqdm(total=len(textos_pendientes), desc="Traduciendo") as pbar:
-            while i < len(textos_pendientes):
-                lote_actual = []
-                indices_lote = []
-                longitud_acumulada = 0
+                translated_text = GoogleTranslator(source='english', target='spanish').translate(text)
+                text_elements[idx] = (path, translated_text, "T")
+                traducidos += 1
+                traducciones_desde_ultimo_guardado += 1
                 
-                # Construir lote respetando el límite de tamaño
-                while i < len(textos_pendientes):
-                    texto_actual = textos_pendientes[i]
-                    longitud_texto = len(texto_actual) + len(SEPARADOR)
-                    
-                    if longitud_acumulada + longitud_texto > MAX_BATCH_SIZE and lote_actual:
-                        break
-                    
-                    lote_actual.append(texto_actual)
-                    indices_lote.append(indices_pendientes[i])
-                    longitud_acumulada += longitud_texto
-                    i += 1
+                # Guardar por lotes o por tiempo
+                tiempo_actual = time.time()
+                if (traducciones_desde_ultimo_guardado >= BATCH_SIZE or 
+                    tiempo_actual - ultimo_guardado >= SAVE_INTERVAL):
+                    guardar_progreso(text_elements, json_file_path_mod)
+                    traducciones_desde_ultimo_guardado = 0
+                    ultimo_guardado = tiempo_actual
                 
-                # Concatenar textos del lote con el separador
-                texto_concatenado = SEPARADOR.join(lote_actual)
-                
-                # Traducir el lote completo
-                traduccion_concatenada = GoogleTranslator(source='english', target='spanish').translate(texto_concatenado)
-                
-                # Separar las traducciones
-                traducciones = traduccion_concatenada.split(SEPARADOR)
-                
-                # Actualizar los elementos traducidos
-                for idx_original, traduccion in zip(indices_lote, traducciones):
-                    path, _, _ = text_elements[idx_original]
-                    text_elements[idx_original] = (path, traduccion.strip(), "T")
-                    traducidos += 1
-                
-                pbar.update(len(lote_actual))
-                
-                # Pequeña pausa para evitar límites de tasa
-                time.sleep(0.1)
+                tiempo_transcurrido = time.time() - inicio
+                porcentaje = (idx + 1) / total_textos * 100
+                print(f"\rTraducidos {traducidos}/{total_textos} textos ({porcentaje:.2f}%) - Tiempo: {tiempo_transcurrido:.2f}s", end='')
+            
+            tiempo_transcurrido = time.time() - inicio
+            print(f"Tiempo transcurrido: {tiempo_transcurrido:.2f} segundos", end='\r')
         
         break  # Sale del while si no ocurre un error
         
     except Exception as e:
         intentos += 1
         print(f"\nError en la traducción: {e}")
-        print(f"Intento {intentos}/{max_intentos}")
+        print(f"Intento {intentos}/{MAX_INTENTOS}")
         
-        # Volver a cargar la lista text_elements desde el archivo JSON
-        with open(json_file_path_ini, 'r', encoding='utf-8') as json_file:
+        # Guardar progreso antes de reintentar
+        guardar_progreso(text_elements, json_file_path_mod)
+        
+        # Recargar desde el último guardado
+        with open(json_file_path_mod, 'r', encoding='utf-8') as json_file:
             text_elements = json.load(json_file)
-        
-        if intentos < max_intentos:
-            time.sleep(2)  # Esperar antes de reintentar
 
-# 3. Guardar los textos traducidos de nuevo en el archivo JSON
-with open(json_file_path_mod, 'w', encoding='utf-8') as json_file:
-    json.dump(text_elements, json_file, ensure_ascii=False, indent=4)
+# 3. Guardar los textos traducidos finales
+guardar_progreso(text_elements, json_file_path_mod)
 
-tiempo_total = time.time() - inicio
-print(f"\nTraducción completada: {traducidos} textos en {tiempo_total:.2f} segundos")
-print(f"Promedio: {tiempo_total/traducidos:.3f} segundos por texto")
+print(f"\nTraducción completada en {time.time() - inicio:.2f} segundos")
