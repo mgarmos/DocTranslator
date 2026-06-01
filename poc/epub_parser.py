@@ -20,7 +20,6 @@ class EPUBParser():
             text_elements.extend(self.get_text_elements_with_path(tree, index))
 
         # Agregar el estado de traducción a cada elemento
-        # Nota: text_elements ahora puede incluir entradas de tail con ruta terminada en '/tail()'
         text_elements_con_traduccion = [[path, text, "N"] for path, text in text_elements]
 
         return text_elements_con_traduccion
@@ -39,7 +38,7 @@ class EPUBParser():
 
     def get_text_elements_with_path(self, element, path=''):
         """
-        Recorre el árbol y extrae tanto .text como .tail.
+        Recorre el árbol y extrae tanto .text como .tail preservando espacios significativos.
         - Para .text usa la ruta normal: /tag[idx]/...
         - Para .tail añade la entrada con sufijo '/tail()' en la ruta correspondiente.
         """
@@ -47,47 +46,60 @@ class EPUBParser():
         for idx, child in enumerate(element.iterchildren(), start=1):
             current_path = self._build_path(child, path, idx)
 
-            # extraer .text del child
-            if child.text and child.text.strip():
-                text_elements.append((current_path, child.text.strip()))
+            # Extraer .text del child preservando espacios si son significativos
+            if child.text is not None:
+                text_content = child.text
+                # Solo agregar si hay contenido no vacío (incluso si es solo espacios significativos)
+                if text_content.strip():  # Hay contenido real
+                    text_elements.append((current_path, text_content))
+                elif text_content:  # Solo espacios, pero podrían ser significativos
+                    # Preservar espacios entre elementos inline
+                    text_elements.append((current_path, text_content))
 
-            # recorrer hijos
+            # Recorrer hijos recursivamente
             text_elements.extend(self.get_text_elements_with_path(child, current_path))
 
-            # BUG fix: capturar .tail (texto inmediatamente después del child)
-            # Se añade como entrada separada con ruta current_path + '/tail()'
-            if child.tail and child.tail.strip():
-                tail_path = current_path + '/tail()'
-                text_elements.append((tail_path, child.tail.strip()))
+            # Capturar .tail (texto inmediatamente después del child)
+            if child.tail is not None:
+                tail_content = child.tail
+                if tail_content.strip():  # Hay contenido real
+                    tail_path = current_path + '/tail()'
+                    text_elements.append((tail_path, tail_content))
+                elif tail_content:  # Solo espacios, pero podrían ser significativos
+                    tail_path = current_path + '/tail()'
+                    text_elements.append((tail_path, tail_content))
 
         return text_elements
 
     def modify_document_with_text_elements(self, element, text_elements, path=''):
         """
-        Recorre y reemplaza tanto .text como .tail.
+        Recorre y reemplaza tanto .text como .tail de forma segura.
         Se espera que las entradas de text_elements que correspondan a tails tengan rutas terminadas en '/tail()'.
         """
+        # Crear un diccionario para búsqueda más eficiente
+        text_dict = {text_path: (new_text, traduccion) for text_path, new_text, traduccion in text_elements}
+        
         for idx, child in enumerate(element.iterchildren(), start=1):
             current_path = self._build_path(child, path, idx)
 
-            # buscar reemplazo para .text
-            for text_path, new_text, traduccion in text_elements:
-                if current_path == text_path:
-                    child.text = new_text
-                    break
+            # Buscar y reemplazar .text
+            if current_path in text_dict:
+                new_text, traduccion = text_dict[current_path]
+                child.text = new_text
 
-            # recursión en hijos
+            # Recursión en hijos
             self.modify_document_with_text_elements(child, text_elements, current_path)
 
-            # buscar reemplazo para .tail (ruta con sufijo '/tail()')
+            # Buscar y reemplazar .tail
             tail_key = current_path + '/tail()'
-            for text_path, new_text, traduccion in text_elements:
-                if tail_key == text_path:
-                    child.tail = new_text
-                    break
+            if tail_key in text_dict:
+                new_text, traduccion = text_dict[tail_key]
+                child.tail = new_text
 
     def _build_path(self, element, path, idx):
-        return f'{path}/{element.tag.split("}")[-1]}[{idx}]' if '}' in element.tag else f'{path}/{element.tag}[{idx}]'
+        """Construye la ruta XPath del elemento de forma consistente."""
+        tag_name = element.tag.split("}")[-1] if '}' in element.tag else element.tag
+        return f'{path}/{tag_name}[{idx}]'
 
 def main(ejecucion=1):
     # Ruta del archivo EPUB
@@ -107,19 +119,19 @@ def main(ejecucion=1):
         for path, text, estadoTraduccion in text_elements:
             print(f'Ruta: {path}, Texto: {text} traducido: {estadoTraduccion}')
 
-        # 2. Guardar los elementos extraídos en un archivo JSON
+        # Guardar los elementos extraídos en un archivo JSON
         json_file_path = 'poc/Examples/text_elements.json'
-        with open(json_file_path, 'w') as json_file:
+        with open(json_file_path, 'w', encoding='utf-8') as json_file:
             json.dump(text_elements, json_file, ensure_ascii=False, indent=4)            
 
     else:
     
-        # 1. Leer el json traducido
+        # Leer el json traducido
         json_file_path_mod = 'poc/Examples/text_elements_modificado.json'
         with open(json_file_path_mod, 'r', encoding='utf-8') as json_file:
             text_elements = json.load(json_file)
                 
-        # # Modificar el documento
+        # Modificar el documento
         print("\nModificando el EPUB...")
         parser.modify_document(epub_path, text_elements)
         print("El EPUB ha sido modificado y guardado como 'modified_book.epub'.")
